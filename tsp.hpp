@@ -103,15 +103,15 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
     deg = calc_deg(n, edges);
     
-    vector<vertex_t> eul_tour = eulerian_path(n, edges, s);
+    vector<vertex_t> eul_tour = eulerian_path(n, edges, t);
     vector<bool> appeared(n, false);
-    appeared[s] = true;
+    appeared[t] = true;
     vector<vertex_t> res;
     for (vertex_t v : eul_tour) {
         if (appeared[v]) continue;
         appeared[v] = true;
         res.push_back(v);
     }
-    res.push_back(s);
+    res.push_back(t);
     return res;
 }

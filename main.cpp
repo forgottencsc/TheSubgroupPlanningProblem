@@ -42,7 +42,7 @@ graph_t read_vlsi(istream& is) {
 }
 
 int main(void) {
-    ifstream ifs("/root/tspp/data/pjh17845.tsp");
+    ifstream ifs("/root/tspp/data/rbu737.tsp");
     const graph_t& g = read_vlsi(ifs);
     const auto v = tspp(g, 0, 1);
     fmt::print("{}", v);

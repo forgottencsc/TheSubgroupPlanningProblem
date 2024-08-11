@@ -11,12 +11,18 @@
 #include <fmt/ranges.h>
 
 using weight_t = double;
+constexpr weight_t inf = 1e20;
 
 using std::pair;
 using std::vector;
 using std::max;
 using std::min;
+using std::move;
 using std::swap;
+using std::lower_bound;
+using std::rotate;
+using boost::get;
+using boost::edge_weight;
 using boost::num_vertices;
 using boost::add_edge;
 using boost::maximum_weighted_matching;
@@ -31,13 +37,29 @@ using vertex_t = graph_t::vertex_descriptor;
 
 using pvv = pair<vertex_t, vertex_t>;
 
-weight_t maximum_edge_weight(const graph_t& g) {
-    weight_t w = std::numeric_limits<weight_t>::min();
+struct vmap : vector<vertex_t> {
+  void build() {
+    sort(begin(), end());
+    erase(unique(begin(), end()), end());
+  }
+  vertex_t id(vertex_t v) {
+    return lower_bound(begin(), end(), v) - begin();
+  }
+};
+
+pair<weight_t, pvv> maximum_edge_weight(const graph_t& g) {
+    pair<weight_t, pvv> result(
+      std::numeric_limits<weight_t>::min(),
+      pvv(graph_t::null_vertex(), graph_t::null_vertex())
+    );
     for (auto[it, end] = edges(g); it != end; ++it) {
         if (!it->exists()) continue;
-        w = max(w, boost::get(boost::edge_weight, g, *it));
+        auto src = boost::source(*it, g);
+        auto dst = boost::target(*it, g);
+        auto w = boost::get(boost::edge_weight, g, *it);
+        result = max(result, make_pair(w, pvv(src, dst)));
     }
-    return w;
+    return result;
 }
 
 vector<pvv> collect_tree_edges(const vector<vertex_t>& pre) {
@@ -99,6 +121,13 @@ vector<pvv> restore(const vector<pvv>& edges, const vector<vertex_t>& ids) {
         res.emplace_back(ids[p.first], ids[p.second]);
     }
     return res;
+}
+
+vector<vertex_t> restore(const vector<vertex_t>& tour, const vector<vertex_t>& ids) {
+  vector<vertex_t> res;
+  for (vertex_t v : ids)
+    res.push_back(ids[v]);
+  return res;
 }
 
 vector<vertex_t> eulerian_path(size_t n, const vector<pvv>& edges, vertex_t s) {
@@ -188,7 +217,7 @@ public:
 
 private:
   enum Label { kSeparated = -2, kInner = -1, kFree = 0, kOuter = 1 };
-  static constexpr cost_t Inf = 1e10;
+  static constexpr cost_t Inf = inf;
 
 private:
   template <typename T>
@@ -933,7 +962,7 @@ private:
 
 vector<vertex_t> minimum_weighted_matching(const graph_t& g) {
     const size_t n = num_vertices(g);
-    weight_t max_w = maximum_edge_weight(g);
+    weight_t max_w = maximum_edge_weight(g).first;
 
     using MWM = MaximumWeightedMatching<double, double>;
     vector<MWM::InputEdge> es;
