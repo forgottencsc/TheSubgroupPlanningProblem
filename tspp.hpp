@@ -2,27 +2,29 @@
 #include "tsp.hpp"
 
 vector<vertex_t> alg1(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    vector<vector<vertex_t>> hs;
+    map<pvv, vector<vertex_t>> hs;
     vector<pvv> ps;
     vmap gids;
     for (const vector<vertex_t>& hids : c) {
         graph_t h = induce(g, hids);
         auto[w, p] = maximum_edge_weight(h);
-        gids.push_back(hids[p.first]);
-        gids.push_back(hids[p.second]);
+        auto tour = tspp(h, p.first, p.second);
+
+        p.first = hids[p.first];
+        p.second = hids[p.second];
+        hs[p] = tour;
+        swap(p.first, p.second);
+        hs[p] = tour;
+        gids.push_back(p.first);
+        gids.push_back(p.second);
         ps.push_back(p);
-        hs.push_back(tspp(h, p.first, p.second));
     }
     gids.build();
+    ps = restore(ps, gids);
+    auto mate = to_mate(g, ps);
     graph_t h = induce(g, gids);
-    vector<vertex_t> mate(gids.size());
-    for (pvv& p : ps) {
-        const vertex_t u = gids.id(p.first);
-        const vertex_t v = gids.id(p.second);
-        mate[u] = v;
-        mate[v] = u;
-    }
-    return spp(h, mate);
+    vector<vertex_t> tour = spp(h, mate);
+    
 }
 
 vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
@@ -74,6 +76,30 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
     return ans;
 }
 
-vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    
-}
+// vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
+//     vector<pair<weight_t, vector<vertex_t>>> res;
+//     vector<pvv> ps;
+//     vmap gids;
+//     for (const vector<vertex_t>& hids : c) {
+//         const graph_t& h = induce(g, hids);
+//         const vertex_t m = num_vertices(h);
+//         res.emplace_back(inf, vector<vertex_t>{});
+//         for (vertex_t s = 0; s < m; ++s) {
+//             const auto& dp = tspp_dp(h, s);
+//             for (vertex_t t = s + 1; t < m; ++t) {
+//                 auto e = boost::edge(s, t, h);
+//                 if (!e.second) continue;
+//                 auto w = dp[(1z << m) - 1][t] - boost::get(edge_weight, h, e.first);
+//                 vector<vertex_t> tour = tspp_dp_route(h, dp, s, t);
+//                 tour = restore(tour, hids);
+//                 res.back() = min(res.back(), make_pair(w, tour));
+//             }
+//         }
+//         const auto& tour = res.back().second;
+//         pvv p(tour.front(), tour.back());
+//         gids.push_back(p.first, p.second);
+//     }
+
+
+
+// }

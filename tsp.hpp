@@ -1,5 +1,5 @@
 #pragma once
-#include "common.hpp"
+#include "matching.hpp"
 
 vector<vertex_t> tsp(const graph_t& g) {
     const auto n = boost::num_vertices(g);
@@ -73,8 +73,6 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
         res.push_back(v);
         appeared[u] = appeared[v] = true;
     }
-    vertex_t v = res.front();
-    res.push_back(v);
 
     return res;
 }
@@ -110,6 +108,51 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
         if (appeared[v]) continue;
         appeared[v] = true;
         res.push_back(v);
+    }
+    res.push_back(t);
+    return res;
+}
+
+vector<vector<weight_t>> tspp_dp(const graph_t& g, vertex_t s) {
+    const vertex_t n = num_vertices(g);
+    vector<vector<weight_t>> dp(1 << n, vector<weight_t>(n, inf));
+    dp[1 << s][s] = 0;
+    for (vertex_t S = (1 << s) + 1; S < (1 << n) - 1; ++S) {
+        for (vertex_t u = 0; u < n; ++u) {
+            if (!(S & (1 << u)))
+                continue;
+            for (vertex_t v = 0; v < n; ++v) {
+                if (S & (1 << v))
+                    continue;
+                auto e = boost::edge(u, v, g);
+                if (!e.second) continue;
+                auto w = boost::get(edge_weight, g, e.first);
+                dp[S | (1 << v)][v] = min(dp[S | (1 << v)][v], dp[S][u] + w);
+            }
+        }
+    }
+    return dp;
+}
+
+vector<vertex_t> tspp_dp_route(const graph_t& g, const vector<vector<weight_t>>& dp, vertex_t s, vertex_t t) {
+    const vertex_t n = num_vertices(g);
+    vector<vertex_t> res;
+    vertex_t S = (1 << n) - 1;
+    while (t != s) {
+        res.push_back(t);
+        vertex_t T = S ^ (1 << t);
+        for (vertex_t u = 0; u < n; ++u) {
+            if (!(T & (1 << u)))
+                continue;
+            auto e = boost::edge(u, t, g);
+            if (!e.second) continue;
+            auto w = boost::get(edge_weight, g, e.first);
+            if (dp[T][u] + w != dp[S][t])
+                continue;
+            S = T;
+            t = u;
+            break;
+        }
     }
     res.push_back(t);
     return res;

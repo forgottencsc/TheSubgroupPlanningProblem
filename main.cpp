@@ -7,14 +7,14 @@ using namespace std;
 
 graph_t read_simiple_graph(istream& is) {
     size_t n, m;
-    cin >> n >> m;
+    is >> n >> m;
 
     graph_t g(n);
 
     for (int i = 0; i < m; ++i) {
         vertex_t u, v;
         int64_t w;
-        cin >> u >> v >> w;
+        is >> u >> v >> w;
         u--;
         v--;
         boost::add_edge(u, v, edge_property_t(w), g);
@@ -42,9 +42,13 @@ graph_t read_vlsi(istream& is) {
 }
 
 int main(void) {
-    ifstream ifs("/root/tspp/data/rbu737.tsp");
+    // const graph_t& g = read_vlsi(ifs);
+    // const auto v = tspp(g, 0, 1);
+    // fmt::print("{}", v);
+    ifstream ifs("/root/tspp/vlsi/xql662.tsp");
     const graph_t& g = read_vlsi(ifs);
-    const auto v = tspp(g, 0, 1);
-    fmt::print("{}", v);
+    auto mate = minimum_weighted_matching(g);
+    auto tour = spp(g, mate);
+    fmt::print("{}", is_spp(num_vertices(g), tour, mate));
     return 0;
 }
