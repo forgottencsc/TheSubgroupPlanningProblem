@@ -95,7 +95,6 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     
     graph_t h = induce(g, ids);
 
-
     vector<vertex_t> mate2 = minimum_weighted_matching(h);
     auto matching_edges = restore(collect_matching_edges(mate2), ids);
 
