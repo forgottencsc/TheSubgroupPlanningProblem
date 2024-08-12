@@ -1,6 +1,3 @@
-#include <bits/stdc++.h>
-#include "common.hpp"
-
 #include "tspp.hpp"
 
 using namespace std;
@@ -63,7 +60,8 @@ graph_t apply_scale(graph_t g, const vector<vector<vertex_t>>& c, double x) {
     return h;
 }
 
-vector<vector<vertex_t>> gen_subgroup(const string& group_by, size_t n, size_t k) {
+vector<vector<vertex_t>> gen_subgroup(const string& group_by, const graph_t& g, size_t k) {
+    const size_t n = num_vertices(g);
     if (group_by == "modulo") {
         const size_t m = (n - 1) / k + 1;
         vector<vector<vertex_t>> c(m);
@@ -84,8 +82,34 @@ vector<vector<vertex_t>> gen_subgroup(const string& group_by, size_t n, size_t k
         }
         return c;
     }
+    else if (group_by == "greedy") {
+        unordered_set<vertex_t> s;
+        for (vertex_t i = 0; i < n; ++i)
+            s.insert(i);
+        
+        vector<vector<vertex_t>> c;
+        vector<weight_t> dis;
+        while (!s.empty()) {
+            vertex_t v = g.null_vertex();
+            if (c.empty() || c.back().size() == k) {
+                c.emplace_back();
+                dis.assign(n, inf);
+                v = *s.begin();
+            }
+            else {
+                for (vertex_t u : s)
+                    if (v == g.null_vertex() || dis[u] < dis[v])
+                        v = u;
+            }
+            for (vertex_t u : s)
+                dis[u] = min(dis[u], boost::get(edge_weight, g, boost::edge(u, v, g).first));
+            c.back().push_back(v);
+            s.erase(v);
+        }
+        return c;
+    }
     else {
-        assert(false);  //  not implemented
+        assert(false);  // not implemented
     }
 }
 
