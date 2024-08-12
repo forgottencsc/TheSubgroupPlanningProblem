@@ -991,7 +991,7 @@ vector<vertex_t> minimum_weighted_matching(const graph_t &g) {
             continue;
         auto src = boost::source(*it, g);
         auto dst = boost::target(*it, g);
-        auto w = boost::get(boost::edge_weight, g, *it);
+        auto w = boost::get(edge_weight, g, *it);
         es.push_back(MWM::InputEdge{(int)src + 1, (int)dst + 1, max_w - w + 1});
     }
 

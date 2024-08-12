@@ -25,6 +25,7 @@ using boost::prim_minimum_spanning_tree;
 using boost::print_graph;
 using boost::source;
 using boost::target;
+using std::make_pair;
 using std::lower_bound;
 using std::map;
 using std::max;
@@ -40,6 +41,11 @@ using graph_t = boost::adjacency_matrix<boost::undirectedS, boost::no_property, 
 using vertex_t = graph_t::vertex_descriptor;
 
 using pvv = pair<vertex_t, vertex_t>;
+
+void normalize(pvv& p) {
+    if (p.first > p.second)
+        swap(p.first, p.second);
+}
 
 struct vmap : vector<vertex_t> {
     void build() {
@@ -60,7 +66,7 @@ pair<weight_t, pvv> maximum_edge_weight(const graph_t &g) {
             continue;
         auto src = boost::source(*it, g);
         auto dst = boost::target(*it, g);
-        auto w = boost::get(boost::edge_weight, g, *it);
+        auto w = boost::get(edge_weight, g, *it);
         result = max(result, make_pair(w, pvv(src, dst)));
     }
     return result;
@@ -128,9 +134,9 @@ vector<pvv> restore(const vector<pvv> &edges, const vector<vertex_t> &ids) {
     return res;
 }
 
-vector<vertex_t> restore(const vector<vertex_t> &tour, const vector<vertex_t> &ids) {
+vector<vertex_t> restore(const vector<vertex_t>& tour, const vector<vertex_t> &ids) {
     vector<vertex_t> res;
-    for (vertex_t v : ids)
+    for (vertex_t v : tour)
         res.push_back(ids[v]);
     return res;
 }
@@ -211,7 +217,7 @@ weight_t tsp_tour_weight(const graph_t &g, const vector<vertex_t> &tour) {
         auto p = boost::edge(u, v, g);
         if (!p.second)
             continue;
-        sum += boost::get(boost::edge_weight, g, p.first);
+        sum += boost::get(edge_weight, g, p.first);
     }
     return sum;
 }
@@ -254,4 +260,36 @@ bool is_spp(size_t n, const vector<vertex_t>& tour, const vector<vertex_t>& mate
             return false;
     }
     return true;
+}
+
+//  tour must be restored
+vector<vertex_t> splice_spp(const map<pvv, vector<vertex_t>>& hs, const vector<vertex_t>& tour) {
+    const size_t n = tour.size();
+    assert(n % 2 == 0);
+    vector<vertex_t> res;
+    for (size_t i = 0; i < n; i += 2) {
+        pvv p(tour[i], tour[i + 1]);
+        normalize(p);
+        auto it = hs.find(p);
+        assert(it != hs.end());
+        auto subtour = it->second;
+        if (subtour.front() != tour[i])
+            reverse(subtour.begin(), subtour.end());
+        assert(subtour.front() == tour[i] && subtour.back() == tour[i + 1]);
+        for (vertex_t v : subtour)
+            res.push_back(v);
+    }
+    return res;
+}
+
+weight_t tour_weight(const graph_t& g, const vector<vertex_t>& tour) {
+    const size_t n = num_vertices(g);
+    weight_t sum = 0;
+    for (size_t i = 0; i < n; ++i) {
+        vertex_t u = tour[i], v = tour[(i + 1) % n];
+        auto e = boost::edge(u, v, g);
+        if (!e.second) continue;
+        sum += boost::get(edge_weight, g, e.first);
+    }
+    return sum;
 }

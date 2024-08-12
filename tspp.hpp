@@ -2,29 +2,19 @@
 #include "tsp.hpp"
 
 vector<vertex_t> alg1(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    map<pvv, vector<vertex_t>> hs;
-    vector<pvv> ps;
-    vmap gids;
+    map<pvv, vector<vertex_t>> subtours;
     for (const vector<vertex_t>& hids : c) {
         graph_t h = induce(g, hids);
         auto[w, p] = maximum_edge_weight(h);
         auto tour = tspp(h, p.first, p.second);
-
+        assert(tour.front() == p.first && tour.back() == p.second);
+        tour = restore(tour, hids);
         p.first = hids[p.first];
         p.second = hids[p.second];
-        hs[p] = tour;
-        swap(p.first, p.second);
-        hs[p] = tour;
-        gids.push_back(p.first);
-        gids.push_back(p.second);
-        ps.push_back(p);
+        normalize(p);
+        subtours[p] = tour;
     }
-    gids.build();
-    ps = restore(ps, gids);
-    auto mate = to_mate(g, ps);
-    graph_t h = induce(g, gids);
-    vector<vertex_t> tour = spp(h, mate);
-    
+    return spp_induce(g, subtours);
 }
 
 vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
@@ -76,30 +66,55 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
     return ans;
 }
 
-// vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
-//     vector<pair<weight_t, vector<vertex_t>>> res;
-//     vector<pvv> ps;
-//     vmap gids;
-//     for (const vector<vertex_t>& hids : c) {
-//         const graph_t& h = induce(g, hids);
-//         const vertex_t m = num_vertices(h);
-//         res.emplace_back(inf, vector<vertex_t>{});
-//         for (vertex_t s = 0; s < m; ++s) {
-//             const auto& dp = tspp_dp(h, s);
-//             for (vertex_t t = s + 1; t < m; ++t) {
-//                 auto e = boost::edge(s, t, h);
-//                 if (!e.second) continue;
-//                 auto w = dp[(1z << m) - 1][t] - boost::get(edge_weight, h, e.first);
-//                 vector<vertex_t> tour = tspp_dp_route(h, dp, s, t);
-//                 tour = restore(tour, hids);
-//                 res.back() = min(res.back(), make_pair(w, tour));
-//             }
-//         }
-//         const auto& tour = res.back().second;
-//         pvv p(tour.front(), tour.back());
-//         gids.push_back(p.first, p.second);
-//     }
+vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
+    map<pvv, vector<vertex_t>> subtours;
+    for (const vector<vertex_t>& hids : c) {
+        const graph_t& h = induce(g, hids);
+        const vertex_t m = num_vertices(h);
+        pair<weight_t, vector<vertex_t>> tmp(inf, vector<vertex_t>());
+        for (vertex_t s = 0; s < m; ++s) {
+            const auto& dp = tspp_dp(h, s);
+            for (vertex_t t = s + 1; t < m; ++t) {
+                auto e = boost::edge(s, t, h);
+                if (!e.second) continue;
+                auto w = dp[(1 << m) - 1][t] - boost::get(edge_weight, h, e.first);
+                vector<vertex_t> tour = tspp_dp_route(h, dp, s, t);
+                tmp = min(tmp, make_pair(w, tour));
+            }
+        }
+        tmp.second = restore(tmp.second, hids);
+        pvv p(tmp.second.front(), tmp.second.back());
+        normalize(p);
+        subtours[p] = tmp.second;
+    }
+    return spp_induce(g, subtours);
+}
 
+vector<vertex_t> algc(const graph_t& g, const vector<vector<vertex_t>>& c) {
+    map<pvv, vector<vertex_t>> subtours;
+    for (const vector<vertex_t>& hids : c) {
+        const size_t m = hids.size();
+        graph_t h(m + 1);
+        for (size_t i = 0; i < m; ++i) {
+            add_edge(i, m, 0, h);
+            for (size_t j = i + 1; j < m; ++j) {
+                auto e = g.get_edge(hids[i], hids[j]);
+                if (!e.first)
+                    continue;
+                add_edge(i, j, e.second, h);
+            }
+        }
+        const auto& dp = tspp_dp(h, m);
+        pair<weight_t, vertex_t> tmp(inf, m);
+        for (vertex_t t = 0; t < m; ++t)
+            tmp = min(tmp, make_pair(dp[(1 << (m + 1)) - 1][t], t));
 
-
-// }
+        vector<vertex_t> tour = tspp_dp_route(h, dp, m, tmp.second);
+        tour.erase(tour.begin());
+        tour = restore(tour, hids);
+        pvv p(tour.front(), tour.back());
+        normalize(p);
+        subtours[p] = tour;
+    }
+    return spp_induce(g, subtours);
+}

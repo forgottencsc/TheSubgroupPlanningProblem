@@ -39,7 +39,7 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     auto new_weight = boost::make_function_property_map<graph_t::edge_descriptor, weight_t>([&](const graph_t::edge_descriptor& e) {
         auto src = boost::source(e, g);
         auto dst = boost::target(e, g);
-        auto w = boost::get(boost::edge_weight, g, e);
+        auto w = boost::get(edge_weight, g, e);
         if (mate[src] == dst && mate[dst] == src)
             return weight_t(0);
         return w;
@@ -77,6 +77,33 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     return res;
 }
 
+vector<vertex_t> spp_induce(const graph_t& g, const map<pvv, vector<vertex_t>>& subtours) {
+    vector<pvv> edges;
+    for (const auto& p : subtours)
+        edges.push_back(p.first);
+
+    vmap gids;
+    for (pvv p : edges) {
+        gids.push_back(p.first);
+        gids.push_back(p.second);
+    }
+    gids.build();
+    for (pvv& p : edges) {
+        p.first = gids.id(p.first);
+        p.second = gids.id(p.second);
+    }
+
+    graph_t h = induce(g, gids);
+    assert(num_vertices(h) == gids.size());
+    vector<vertex_t> mate = to_mate(h, edges);
+
+    assert(is_perfect(num_vertices(h), mate));
+    vector<vertex_t> tour = spp(h, mate);
+    assert(is_perm(num_vertices(h), tour));
+    tour = restore(tour, gids);
+    return splice_spp(subtours, tour);
+}
+
 vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     const auto n = boost::num_vertices(g);
     vector<vertex_t> pre(n);
@@ -100,7 +127,7 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
     deg = calc_deg(n, edges);
     
-    vector<vertex_t> eul_tour = eulerian_path(n, edges, t);
+    vector<vertex_t> eul_tour = eulerian_path(n, edges, s);
     vector<bool> appeared(n, false);
     appeared[t] = true;
     vector<vertex_t> res;
@@ -113,11 +140,12 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     return res;
 }
 
+//  dp[S][t] is the weight of the optimal tsp-(s-t)-path of G[S]
 vector<vector<weight_t>> tspp_dp(const graph_t& g, vertex_t s) {
     const vertex_t n = num_vertices(g);
     vector<vector<weight_t>> dp(1 << n, vector<weight_t>(n, inf));
     dp[1 << s][s] = 0;
-    for (vertex_t S = (1 << s) + 1; S < (1 << n) - 1; ++S) {
+    for (vertex_t S = (1 << s); S < (1 << n) - 1; ++S) {
         for (vertex_t u = 0; u < n; ++u) {
             if (!(S & (1 << u)))
                 continue;
@@ -131,6 +159,9 @@ vector<vector<weight_t>> tspp_dp(const graph_t& g, vertex_t s) {
             }
         }
     }
+    for (vertex_t t = 0; t < n; ++t)
+        if (t != s)
+            assert(dp[(1 << n) - 1][t] != inf);
     return dp;
 }
 
@@ -155,5 +186,6 @@ vector<vertex_t> tspp_dp_route(const graph_t& g, const vector<vector<weight_t>>&
         }
     }
     res.push_back(t);
+    reverse(res.begin(), res.end());
     return res;
 }
