@@ -36,7 +36,7 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
             for (size_t ii = 0; ii < c[i].size(); ++ii)
                 for (size_t jj = 0; jj < c[j].size(); ++jj) {
                     auto p = boost::edge(c[i][ii], c[j][jj], g);
-                    min_w = min(min_w, make_pair(get(edge_weight, g, p.first), pvv(ii, jj)));
+                    min_w = min(min_w, make_pair(get(edge_weight, g, p.first), pvv(c[i][ii], c[j][jj])));
                 }
             add_edge(i, j, min_w.first + (mw[i].first + mw[j].first) / 2, h);
             he[i][j] = he[j][i] = min_w.second;
