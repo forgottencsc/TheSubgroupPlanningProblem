@@ -90,6 +90,57 @@ vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
     return spp_induce(g, subtours);
 }
 
+vector<vertex_t> alg4(const graph_t& g, const vector<vector<vertex_t>>& c) {
+    const size_t n = num_vertices(g), k = c.size();
+    vector<map<pvv, pair<weight_t, vector<vertex_t>>>> dp(1 << k);
+
+    for (size_t id = 0; id < k; ++id) {
+        const graph_t& h = induce(g, c[id]);
+        const size_t m = num_vertices(h);
+        for (size_t i = 0; i < m; ++i)
+            for (size_t j = i + 1; j < m; ++j) {
+                auto tour = tspp(h, i, j);
+                auto w = tsp_weight(h, tour, true);
+                dp[1 << id][make_pair(c[id][i], c[id][j])] = make_pair(w, tour);
+                reverse(tour.begin(), tour.end());
+                dp[1 << id][make_pair(c[id][j], c[id][i])] = make_pair(w, tour);
+            }
+    }
+    for (size_t S = 1; S < (1 << k); ++S) {
+        if (__builtin_popcountll(S) == 1)
+            continue;
+        for (const auto& p : dp[S]) {
+            for (size_t x = 0; x < k; ++x) {
+                if (S & (1 << x))
+                    continue;
+                for (const auto& q : dp[1 << x]) {
+                    const auto[sp, tp] = p.first;
+                    const auto[sq, tq] = q.first;
+                    const auto lp = p.second;
+                    const auto lq = q.second;
+                    auto r = make_pair(sp, tq);
+                    auto e = boost::edge(sq, tp, g);
+                    auto w = boost::get(edge_weight, g, e.first);
+                    vector<vertex_t> t(lp.second);
+                    t.insert(t.end(), lq.second.begin(), lq.second.end());
+                    pair<weight_t, vector<vertex_t>> l(lp.first+ w + lq.first, t);
+
+                    auto ret = dp[S | (1 << x)].insert_or_assign(r, l);
+                    if (ret.second)
+                        continue;
+                    auto it = ret.first;
+                    it->second = min(it->second, l);
+                }
+            }
+        }
+    }
+    pair<weight_t, vector<vertex_t>> ans(inf, vector<vertex_t>());
+    for (size_t u = 0; u < n; ++u)
+        for (size_t v = u + 1; v < n; ++v)  
+            ans = min(ans, dp[(1 << k) - 1][make_pair(u, v)]);
+    return ans.second;
+}
+
 vector<vertex_t> algc(const graph_t& g, const vector<vector<vertex_t>>& c) {
     map<pvv, vector<vertex_t>> subtours;
     for (const vector<vertex_t>& hids : c) {

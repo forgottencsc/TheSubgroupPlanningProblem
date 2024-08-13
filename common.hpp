@@ -210,15 +210,15 @@ vector<vertex_t> filter_eul_tour(size_t n, const vector<vertex_t> &tour) {
     return res;
 }
 
-weight_t tsp_tour_weight(const graph_t &g, const vector<vertex_t> &tour) {
+
+weight_t tsp_weight(const graph_t& g, const vector<vertex_t>& tour, bool path = false) {
     const size_t n = num_vertices(g);
     weight_t sum = 0;
-    for (size_t i = 0; i < n; ++i) {
-        size_t u = tour[i], v = tour[i + 1];
-        auto p = boost::edge(u, v, g);
-        if (!p.second)
-            continue;
-        sum += boost::get(edge_weight, g, p.first);
+    for (size_t i = 0; i < n - (path ? 1 : 0); ++i) {
+        vertex_t u = tour[i], v = tour[(i + 1) % n];
+        auto e = boost::edge(u, v, g);
+        if (!e.second) continue;
+        sum += boost::get(edge_weight, g, e.first);
     }
     return sum;
 }
@@ -281,16 +281,4 @@ vector<vertex_t> splice_spp(const map<pvv, vector<vertex_t>>& hs, const vector<v
             res.push_back(v);
     }
     return res;
-}
-
-weight_t tour_weight(const graph_t& g, const vector<vertex_t>& tour) {
-    const size_t n = num_vertices(g);
-    weight_t sum = 0;
-    for (size_t i = 0; i < n; ++i) {
-        vertex_t u = tour[i], v = tour[(i + 1) % n];
-        auto e = boost::edge(u, v, g);
-        if (!e.second) continue;
-        sum += boost::get(edge_weight, g, e.first);
-    }
-    return sum;
 }

@@ -27,9 +27,9 @@ g++ tspp.cpp -o tspp -O3
 ```
 
 - `instance`: Path to instance
-- `alg`: Which algorithm to run. Valid values: `1/2/3` for algorithms in this paper. `c` for comparison.
+- `alg`: Which algorithm to run. Valid values: `1/2/3/4` for algorithms in this paper. `c` for comparison.
 - `scale`: The multiple of edge weights inside each subgroup.
-- `group by`: Method to generate subgroups. Valid values: `modulo|random|greedy(todo)`.
+- `group by`: Method to generate subgroups. Valid values: `modulo|random|greedy`.
 - `group size`: Maximum number of vertices for each group.
 
 Output: A real number, denoting the weight of the tour obtained by the specified algorithm.

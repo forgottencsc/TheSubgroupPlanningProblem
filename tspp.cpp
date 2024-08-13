@@ -137,11 +137,14 @@ int main(int argc, char** argv) {
     else if (alg == "3") {
         tour = alg3(h, c);
     }
+    else if (alg == "4") {
+        tour = alg4(h, c);
+    }
     else if (alg == "c") {
         tour = algc(h, c);
     }
 
-    weight_t ans = tour_weight(h, tour);
+    weight_t ans = tsp_weight(h, tour, false);
     printf("%f\n", ans);
 
     return 0;
