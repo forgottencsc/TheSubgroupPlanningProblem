@@ -36,7 +36,7 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
             for (size_t ii = 0; ii < c[i].size(); ++ii)
                 for (size_t jj = 0; jj < c[j].size(); ++jj) {
                     auto p = boost::edge(c[i][ii], c[j][jj], g);
-                    min_w = min(min_w, make_pair(get(edge_weight, g, p.first), pvv(c[i][ii], c[j][jj])));
+                    min_w = min(min_w, make_pair(get(edge_weight, g, p.first), pvv(ii, jj)));
                 }
             add_edge(i, j, min_w.first + (mw[i].first + mw[j].first) / 2, h);
             he[i][j] = he[j][i] = min_w.second;
@@ -51,8 +51,11 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
         const vertex_t u = res[i], v = res[(i + 1) % m], w = res[(i + 2) % m];
         const auto puv = he[u][v], pvw = he[v][w];
         vector<vertex_t> tour;
-        if (puv.second != pvw.first)
+        if (puv.second != pvw.first) {
             tour = tspp(hs[v], puv.second, pvw.first);
+            assert(tour.front() == puv.second);
+            assert(tour.back() == pvw.first);
+        }
         else {
             tour = tsp(hs[v]);
             auto it = find(tour.begin(), tour.end(), puv.second);
