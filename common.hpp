@@ -27,6 +27,7 @@ using boost::source;
 using boost::target;
 using std::make_pair;
 using std::lower_bound;
+using std::unordered_map;
 using std::map;
 using std::max;
 using std::min;
@@ -55,6 +56,12 @@ struct vmap : vector<vertex_t> {
     }
     vertex_t id(vertex_t v) {
         return lower_bound(begin(), end(), v) - begin();
+    }
+};
+
+struct hash_pvv {
+    size_t operator()(pvv p) const {
+        return ((size_t)(p.first) << 32) | p.second;
     }
 };
 

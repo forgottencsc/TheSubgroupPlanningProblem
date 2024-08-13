@@ -92,7 +92,7 @@ vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
 
 vector<vertex_t> alg4(const graph_t& g, const vector<vector<vertex_t>>& c) {
     const size_t n = num_vertices(g), k = c.size();
-    vector<map<pvv, pair<weight_t, vector<vertex_t>>>> dp(1 << k);
+    vector<unordered_map<pvv, pair<weight_t, vector<vertex_t>>, hash_pvv>> dp(1 << k);
 
     for (size_t id = 0; id < k; ++id) {
         const graph_t& h = induce(g, c[id]);
@@ -101,14 +101,13 @@ vector<vertex_t> alg4(const graph_t& g, const vector<vector<vertex_t>>& c) {
             for (size_t j = i + 1; j < m; ++j) {
                 auto tour = tspp(h, i, j);
                 auto w = tsp_weight(h, tour, true);
+                tour = restore(tour, c[id]);
                 dp[1 << id][make_pair(c[id][i], c[id][j])] = make_pair(w, tour);
                 reverse(tour.begin(), tour.end());
                 dp[1 << id][make_pair(c[id][j], c[id][i])] = make_pair(w, tour);
             }
     }
     for (size_t S = 1; S < (1 << k); ++S) {
-        if (__builtin_popcountll(S) == 1)
-            continue;
         for (const auto& p : dp[S]) {
             for (size_t x = 0; x < k; ++x) {
                 if (S & (1 << x))
@@ -136,8 +135,11 @@ vector<vertex_t> alg4(const graph_t& g, const vector<vector<vertex_t>>& c) {
     }
     pair<weight_t, vector<vertex_t>> ans(inf, vector<vertex_t>());
     for (size_t u = 0; u < n; ++u)
-        for (size_t v = u + 1; v < n; ++v)  
-            ans = min(ans, dp[(1 << k) - 1][make_pair(u, v)]);
+        for (size_t v = u + 1; v < n; ++v) {
+            auto it = dp[(1 << k) - 1].find(make_pair(u, v));
+            if (it != dp[(1 << k) - 1].end())
+                ans = min(ans, it->second);
+        }
     return ans.second;
 }
 
