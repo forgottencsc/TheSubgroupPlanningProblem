@@ -117,6 +117,21 @@ vector<vertex_t> spp_induce(const graph_t& g, const map<pvv, vector<vertex_t>>& 
     return splice_spp(subtours, tour);
 }
 
+vector<vertex_t> eul_to_tsp(size_t n, const vector<pvv>& edges, vertex_t s, vertex_t t) {
+    vector<vertex_t> eul_tour = eulerian_path(n, edges, s);
+    vector<bool> appeared(n, false);
+    appeared[t] = true;
+    vector<vertex_t> res;
+    for (vertex_t v : eul_tour) {
+        if (appeared[v]) continue;
+        appeared[v] = true;
+        res.push_back(v);
+    }
+    res.push_back(t);
+    assert(is_perm(n, res) && res.front() == s && res.back() == t);
+    return res;
+}
+
 vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     const auto n = boost::num_vertices(g);
     vector<vertex_t> pre(n);
@@ -139,18 +154,41 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
     vector<pvv> edges(move(tree_edges));
     edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
     // deg = calc_deg(n, edges);
-    
-    vector<vertex_t> eul_tour = eulerian_path(n, edges, s);
-    vector<bool> appeared(n, false);
-    appeared[t] = true;
-    vector<vertex_t> res;
-    for (vertex_t v : eul_tour) {
-        if (appeared[v]) continue;
-        appeared[v] = true;
-        res.push_back(v);
+    return eul_to_tsp(n, edges, s, t);
+}
+
+vector<vertex_t> tspp(const graph_t& g) {
+    const size_t n = boost::num_vertices(g);
+    vector<vertex_t> pre(n);
+    prim_minimum_spanning_tree(g, pre.data());
+
+    auto tree_edges = collect_tree_edges(pre);
+
+    auto deg = calc_deg(n, tree_edges);
+
+    auto ids = collect_odd_deg_vertices(deg);
+    const size_t m = ids.size();
+    graph_t h(m + 2);
+    for (size_t i = 0; i < m; ++i) {
+        for (size_t j = i + 1; j < m; ++j) {
+            auto e = g.get_edge(ids[i], ids[j]);
+            if (!e.first)
+                continue;
+            add_edge(i, j, e.second, h);
+        }
+        add_edge(ids[i], m, 0, h);
+        add_edge(ids[i], m + 1, 0, h);
     }
-    res.push_back(t);
-    assert(is_perm(n, res) && res.front() == s && res.back() == t);
+    ids.push_back(n);
+    ids.push_back(n + 1);
+    
+    vector<vertex_t> mate2 = minimum_weighted_matching(h);
+    auto matching_edges = restore(collect_matching_edges(mate2), ids);
+    vector<pvv> edges(move(tree_edges));
+    edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
+    auto res = eul_to_tsp(n + 2, edges, n, n + 1);
+    res.pop_back();
+    res.erase(res.begin());
     return res;
 }
 

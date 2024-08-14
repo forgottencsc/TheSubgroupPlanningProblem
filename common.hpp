@@ -37,6 +37,7 @@ using std::rotate;
 using std::swap;
 using std::vector;
 using std::unordered_set;
+using std::remove_if;
 
 using edge_property_t = boost::property<boost::edge_weight_t, weight_t>;
 using graph_t = boost::adjacency_matrix<boost::undirectedS, boost::no_property, edge_property_t>;

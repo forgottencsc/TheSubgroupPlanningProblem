@@ -5,10 +5,7 @@ vector<vertex_t> alg1(const graph_t& g, const vector<vector<vertex_t>>& c) {
     map<pvv, vector<vertex_t>> subtours;
     for (const vector<vertex_t>& hids : c) {
         graph_t h = induce(g, hids);
-        if (num_vertices(h) == 1) {
-            subtours[make_pair(hids[0], hids[0])] = vector<vertex_t>(hids[0]);
-            continue;
-        }
+        assert(num_vertices(h) >= 2);
         auto[w, p] = maximum_edge_weight(h);
         auto tour = tspp(h, p.first, p.second);
         assert(tour.front() == p.first && tour.back() == p.second);
@@ -172,6 +169,19 @@ vector<vertex_t> algc(const graph_t& g, const vector<vector<vertex_t>>& c) {
 
         vector<vertex_t> tour = tspp_dp_route(h, dp, m, tmp.second);
         tour.erase(tour.begin());
+        tour = restore(tour, hids);
+        pvv p(tour.front(), tour.back());
+        normalize(p);
+        subtours[p] = tour;
+    }
+    return spp_induce(g, subtours);
+}
+
+vector<vertex_t> algp1(const graph_t& g, const vector<vector<vertex_t>>& c) {
+    map<pvv, vector<vertex_t>> subtours;
+    for (const vector<vertex_t>& hids : c) {
+        graph_t h = induce(g, hids);
+        auto tour = tspp(h);
         tour = restore(tour, hids);
         pvv p(tour.front(), tour.back());
         normalize(p);
