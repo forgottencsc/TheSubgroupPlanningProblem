@@ -52,7 +52,7 @@ graph_t apply_scale(graph_t g, const vector<vector<vertex_t>>& c, double x) {
         auto src = boost::source(*it, g);
         auto dst = boost::target(*it, g);
         auto w = boost::get(edge_weight, g, *it);
-        if (color[src] != color[dst])
+        if (color[src] == color[dst])
             w *= x;
         add_edge(src, dst, edge_property_t(w), h);
     }
