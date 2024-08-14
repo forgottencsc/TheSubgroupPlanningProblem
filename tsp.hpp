@@ -176,8 +176,8 @@ vector<vertex_t> tspp(const graph_t& g) {
                 continue;
             add_edge(i, j, e.second, h);
         }
-        add_edge(ids[i], m, 0, h);
-        add_edge(ids[i], m + 1, 0, h);
+        add_edge(i, m, 0, h);
+        add_edge(i, m + 1, 0, h);
     }
     ids.push_back(n);
     ids.push_back(n + 1);

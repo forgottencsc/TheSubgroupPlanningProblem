@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
         tour = algc(h, c);
     }
     else if (alg == "p1") {
-        tour = algc(h, c);
+        tour = algp1(h, c);
     }
     assert(is_perm(n, tour));
     weight_t ans = tsp_weight(h, tour, false);
