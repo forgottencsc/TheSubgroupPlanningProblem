@@ -23,14 +23,19 @@ vector<vertex_t> tsp(const graph_t& g) {
 
     vector<vertex_t> eul_tour = eulerian_path(n, edges, 0);
 
-    vector<bool> appeared(n, false);
-    vector<vertex_t> res;
-    for (vertex_t v : eul_tour) {
-        if (appeared[v]) continue;
-        appeared[v] = true;
-        res.push_back(v);
+    pair<weight_t, vector<vertex_t>> res(inf, vector<vertex_t>());
+    for (size_t i = 0; i < eul_tour.size(); ++i) {
+        vector<vertex_t> tour;
+        vector<bool> appeared(n, false);
+        for (size_t j = 0; j < eul_tour.size(); ++j) {
+            vertex_t v = eul_tour[(i + j) % eul_tour.size()];
+            if (appeared[v]) continue;
+            appeared[v] = true;
+            tour.push_back(v);
+        }
+        res = min(res, make_pair(tsp_weight(g, tour, false), tour));
     }
-    return res;
+    return res.second;
 }
 
 vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
@@ -62,19 +67,22 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
 
     vector<vertex_t> eul_tour = eulerian_path(n, edges, 0);
-
-    vector<bool> appeared(n, false);
-    vector<vertex_t> res;
-    for (size_t i = 0; i + 1 < eul_tour.size(); ++i) {
-        size_t u = eul_tour[i], v = eul_tour[i + 1];
-        if (appeared[u]) continue;
-        if (mate[u] != v) continue;
-        res.push_back(u);
-        res.push_back(v);
-        appeared[u] = appeared[v] = true;
+    
+    pair<weight_t, vector<vertex_t>> res(inf, vector<vertex_t>());
+    for (size_t i = 0; i < eul_tour.size(); ++i) {
+        vector<vertex_t> tour;
+        vector<bool> appeared(n, false);
+        for (size_t j = 0; j < eul_tour.size(); ++j) {
+            size_t u = eul_tour[(i + j) % eul_tour.size()], v = eul_tour[(i + j + 1) % eul_tour.size()];
+            if (appeared[u]) continue;
+            if (mate[u] != v) continue;
+            tour.push_back(u);
+            tour.push_back(v);
+            appeared[u] = appeared[v] = true;
+        }
+        res = min(res, make_pair(tsp_weight(g, tour, false), tour));
     }
-
-    return res;
+    return res.second;
 }
 
 vector<vertex_t> spp_induce(const graph_t& g, const map<pvv, vector<vertex_t>>& subtours) {
