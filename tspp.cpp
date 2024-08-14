@@ -113,6 +113,30 @@ vector<vector<vertex_t>> gen_subgroup(const string& group_by, const graph_t& g, 
     }
 }
 
+graph_t clone_vertices(const graph_t& g, vector<vector<vertex_t>>& c) {
+    size_t n = num_vertices(g), m = n;
+    map<vertex_t, vertex_t> clones;
+
+    //   Fix single vertex subgroup
+    for (vector<vertex_t>& hids : c) {
+        if (hids.size() != 1) continue;
+        vertex_t v = hids.front();
+        vertex_t u = m++;
+        hids.push_back(u);
+        clones[m] = v;
+    }
+
+    graph_t h(m);
+    for (size_t i = 0; i < m; ++i)
+        for (size_t j = i + 1; j < m; ++j) {
+            vertex_t u = i < n ? i : clones[i];
+            vertex_t v = j < n ? j : clones[j];
+            auto e = g.get_edge(u, v);
+            add_edge(i, j, e.second, h);
+        }
+    return h;
+}
+
 //  tspp <instance xxx.tsp> <alg: 1|2|3|c> <scale: X> <group by: modulo|random|greedy(todo)> <group size: k>
 int main(int argc, char** argv) {
     string path = argv[1];
@@ -122,9 +146,10 @@ int main(int argc, char** argv) {
     size_t k = strtoull(argv[5], nullptr, 10);
 
     ifstream ifs(argv[1]);
-    const graph_t g = read_vlsi(ifs);
+    graph_t g = read_vlsi(ifs);
+    auto c = gen_subgroup(group_by, g, k);
+    g = clone_vertices(g, c);
     const size_t n = num_vertices(g);
-    auto c = gen_subgroup(group_by, n, k);
     const graph_t h = apply_scale(g, c, x);
 
     vector<vertex_t> tour;
@@ -143,9 +168,11 @@ int main(int argc, char** argv) {
     else if (alg == "c") {
         tour = algc(h, c);
     }
-
+    assert(is_perm(n, tour));
     weight_t ans = tsp_weight(h, tour, false);
     printf("%f\n", ans);
 
     return 0;
 }
+
+//vlsi/pbl395.tsp 4 4 greedy 9
