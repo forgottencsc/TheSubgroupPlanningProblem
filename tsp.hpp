@@ -51,8 +51,12 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     });
     prim_minimum_spanning_tree(g, pre.data(), boost::weight_map(new_weight));
 
+    //  check whether every matching edge is inside the MST
+    for (const vertex_t& v : mate)
+        assert(pre[v] == mate[v] || pre[mate[v]] == v);
 
     auto tree_edges = collect_tree_edges(pre);
+
 
     auto deg = calc_deg(n, tree_edges);
 
@@ -67,6 +71,7 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
 
     vector<vertex_t> eul_tour = eulerian_path(n, edges, 0);
+    assert(eul_tour.size() == edges.size() + 1);
     
     pair<weight_t, vector<vertex_t>> res(inf, vector<vertex_t>());
     for (size_t i = 0; i < eul_tour.size(); ++i) {
@@ -133,7 +138,7 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
 
     vector<pvv> edges(move(tree_edges));
     edges.insert(edges.end(), matching_edges.begin(), matching_edges.end());
-    deg = calc_deg(n, edges);
+    // deg = calc_deg(n, edges);
     
     vector<vertex_t> eul_tour = eulerian_path(n, edges, s);
     vector<bool> appeared(n, false);
@@ -145,6 +150,7 @@ vector<vertex_t> tspp(const graph_t& g, vertex_t s, vertex_t t) {
         res.push_back(v);
     }
     res.push_back(t);
+    assert(is_perm(n, res) && res.front() == s && res.back() == t);
     return res;
 }
 

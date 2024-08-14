@@ -70,7 +70,7 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
         for (vertex_t v : tour)
             ans.push_back(v);
     }
-
+    assert(is_perm(num_vertices(g), ans));
     return ans;
 }
 
