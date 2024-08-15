@@ -13,7 +13,8 @@ vector<vertex_t> tsp(const graph_t& g) {
     auto ids = collect_odd_deg_vertices(deg);
 
     graph_t h = induce(g, ids);
-
+    // print_graph(h);
+    // assert(false);
     vector<vertex_t> mate = minimum_weighted_matching(h);
 
     auto matching_edges = restore(collect_matching_edges(mate), ids);
@@ -63,6 +64,8 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     auto id = collect_odd_deg_vertices(deg);
 
     graph_t h = induce(g, id);
+    // print_graph(h);
+    // assert(false);
 
     vector<vertex_t> mate2 = minimum_weighted_matching(h);
     auto matching_edges = restore(collect_matching_edges(mate2), id);
