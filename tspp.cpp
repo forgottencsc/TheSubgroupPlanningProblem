@@ -158,6 +158,8 @@ int main(int argc, char** argv) {
 
     
     
+    
+    t_start = std::chrono::system_clock::now();
     vector<vertex_t> tour;
     if (alg == "1") {
         tour = alg1(h, c);
@@ -179,6 +181,7 @@ int main(int argc, char** argv) {
     }
     assert(is_perm(n, tour));
     weight_t ans = tsp_weight(h, tour, false);
+    
     printf("%lld,%lf\n", (long long)ans, t.dur_s());
 
     return 0;
