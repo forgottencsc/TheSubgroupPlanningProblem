@@ -139,6 +139,10 @@ graph_t clone_vertices(const graph_t& g, vector<vector<vertex_t>>& c) {
 
 //  tspp <instance xxx.tsp> <alg: 1|2|3|c> <scale: X> <group by: modulo|random|greedy(todo)> <group size: k>
 int main(int argc, char** argv) {
+
+    timer t;
+
+    
     string path = argv[1];
     string alg = argv[2];
     double x = strtod(argv[3], nullptr);
@@ -152,6 +156,8 @@ int main(int argc, char** argv) {
     const size_t n = num_vertices(g);
     const graph_t h = apply_scale(g, c, x);
 
+    
+    
     vector<vertex_t> tour;
     if (alg == "1") {
         tour = alg1(h, c);
@@ -173,7 +179,7 @@ int main(int argc, char** argv) {
     }
     assert(is_perm(n, tour));
     weight_t ans = tsp_weight(h, tour, false);
-    printf("%f\n", ans);
+    printf("%lld,%lf\n", (long long)ans, t.dur_s());
 
     return 0;
 }

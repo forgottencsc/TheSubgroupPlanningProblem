@@ -290,3 +290,19 @@ vector<vertex_t> splice_spp(const map<pvv, vector<vertex_t>>& hs, const vector<v
     }
     return res;
 }
+
+using std::chrono::system_clock;
+using std::chrono::seconds;
+using std::chrono::milliseconds;
+using std::chrono::duration_cast;
+
+struct timer {
+    system_clock::time_point t_start;
+    auto now() { return system_clock::now(); }
+    auto dur() { return duration_cast<milliseconds>(now() - t_start); }
+    auto dur_s() { return duration_cast<milliseconds>(now() - t_start).count() / 1000.0; }
+    void reset() { t_start = now(); }
+    timer() : t_start(now()) {}
+    template<class Duration>
+    bool check(Duration m) { return dur() < m; }
+};
