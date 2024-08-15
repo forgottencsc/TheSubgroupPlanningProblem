@@ -9,8 +9,9 @@
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#include <fmt/chrono.h>
 
-using weight_t = double;
+using weight_t = float;
 constexpr weight_t inf = 1e20;
 
 using boost::add_edge;
@@ -289,4 +290,10 @@ vector<vertex_t> splice_spp(const map<pvv, vector<vertex_t>>& hs, const vector<v
             res.push_back(v);
     }
     return res;
+}
+
+std::chrono::system_clock::time_point t_start;
+void print_time() {
+    auto t_end = std::chrono::system_clock::now();
+    printf("%ldms\n", std::chrono::duration_cast<std::chrono::milliseconds>(t_end-t_start).count());
 }

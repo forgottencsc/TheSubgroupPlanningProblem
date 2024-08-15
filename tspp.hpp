@@ -23,7 +23,7 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
     vector<graph_t> hs;
     for (const vector<vertex_t>& hids: c) 
         hs.emplace_back(induce(g, hids));
-
+    
     vector<pair<weight_t, pvv>> mw;
     for (const graph_t& h : hs)
         mw.emplace_back(maximum_edge_weight(h));
@@ -43,7 +43,6 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
             he[i][j] = he[j][i] = min_w.second;
             swap(he[j][i].first, he[j][i].second);
         }
-    
 
     vector<vertex_t> ans;
 
@@ -68,6 +67,7 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
             ans.push_back(v);
     }
     assert(is_perm(num_vertices(g), ans));
+    print_time();
     return ans;
 }
 
