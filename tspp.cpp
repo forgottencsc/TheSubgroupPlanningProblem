@@ -139,6 +139,19 @@ graph_t clone_vertices(const graph_t& g, vector<vector<vertex_t>>& c) {
 
 //  tspp <instance xxx.tsp> <alg: 1|2|3|c> <scale: X> <group by: modulo|random|greedy(todo)> <group size: k>
 int main(int argc, char** argv) {
+    mutex mtx;
+    condition_variable cv;
+    bool finished = false;
+    thread thrd([&](){ 
+        unique_lock lock(mtx);
+        cv.wait_for(lock, chrono::hours(1), [&](){ return finished; });
+        if (!finished) {
+            printf("-1,-1\n");
+            fflush(stdout);
+            _exit(0);
+        }
+    });
+
 
     timer t;
 
@@ -182,6 +195,13 @@ int main(int argc, char** argv) {
     assert(is_perm(n, tour));
     weight_t ans = tsp_weight(h, tour, false);
     
+    mtx.lock();
+    finished = true;
+    mtx.unlock();
+    cv.notify_all();
+
+    thrd.join();
+
     printf("%lld,%lf\n", (long long)ans, t.dur_s());
 
     return 0;
