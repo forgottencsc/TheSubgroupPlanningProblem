@@ -170,8 +170,8 @@ int main(int argc, char** argv) {
     const graph_t h = apply_scale(g, c, x);
 
     
-    
-    
+    // fmt::print("{}\n", c);
+
     t_start = std::chrono::system_clock::now();
     vector<vertex_t> tour;
     if (alg == "1") {
@@ -193,7 +193,9 @@ int main(int argc, char** argv) {
         tour = algp1(h, c);
     }
     assert(is_perm(n, tour));
+    // fmt::print("{}", tour);
     weight_t ans = tsp_weight(h, tour, false);
+
     
     mtx.lock();
     finished = true;

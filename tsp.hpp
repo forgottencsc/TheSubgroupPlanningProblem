@@ -93,7 +93,7 @@ vector<vertex_t> spp(const graph_t& g, const vector<vertex_t>& mate) {
     return res.second;
 }
 
-vector<vertex_t> spp_induce(const graph_t& g, const map<pvv, vector<vertex_t>>& subtours) {
+vector<vertex_t> spp_induce(const graph_t& g, const unordered_map<pvv, vector<vertex_t>, hash_pvv>& subtours) {
     vector<pvv> edges;
     for (const auto& p : subtours)
         edges.push_back(p.first);

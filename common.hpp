@@ -11,7 +11,7 @@
 #include <fmt/ranges.h>
 #include <fmt/chrono.h>
 
-using weight_t = float;
+using weight_t = double;
 constexpr weight_t inf = 1e20;
 
 using boost::add_edge;
@@ -68,17 +68,25 @@ struct hash_pvv {
 };
 
 pair<weight_t, pvv> maximum_edge_weight(const graph_t &g) {
+    const size_t n = num_vertices(g);
     pair<weight_t, pvv> result(
         std::numeric_limits<weight_t>::min(),
         pvv(graph_t::null_vertex(), graph_t::null_vertex()));
-    for (auto [it, end] = edges(g); it != end; ++it) {
-        if (!it->exists())
-            continue;
-        auto src = boost::source(*it, g);
-        auto dst = boost::target(*it, g);
-        auto w = boost::get(edge_weight, g, *it);
-        result = max(result, make_pair(w, pvv(src, dst)));
-    }
+    
+    for (size_t i = 0; i < n; ++i)
+        for (size_t j = i + 1; j < n; ++j) {
+            auto e = boost::edge(i, j, g);
+            auto w = boost::get(edge_weight, g, e.first);
+            result = max(result, make_pair(w, pvv(i, j)));
+        }
+    // for (auto [it, end] = edges(g); it != end; ++it) {
+    //     if (!it->exists())
+    //         continue;
+    //     auto src = boost::source(*it, g);
+    //     auto dst = boost::target(*it, g);
+    //     auto w = boost::get(edge_weight, g, *it);
+    //     result = max(result, make_pair(w, pvv(src, dst)));
+    // }
     return result;
 }
 
@@ -226,7 +234,19 @@ weight_t tsp_weight(const graph_t& g, const vector<vertex_t>& tour, bool path = 
     for (size_t i = 0; i < n - (path ? 1 : 0); ++i) {
         vertex_t u = tour[i], v = tour[(i + 1) % n];
         auto e = boost::edge(u, v, g);
-        if (!e.second) continue;
+        assert(e.second);
+        sum += boost::get(edge_weight, g, e.first);
+    }
+    return sum;
+}
+
+weight_t path_weight(const graph_t& g, const vector<vertex_t>& tour) {
+    const size_t n = num_vertices(g);
+    weight_t sum = 0;
+    for (size_t i = 0; i + 1 < tour.size(); ++i) {
+        vertex_t u = tour[i], v = tour[i + 1];
+        auto e = boost::edge(u, v, g);
+        assert(e.second);
         sum += boost::get(edge_weight, g, e.first);
     }
     return sum;
@@ -273,7 +293,7 @@ bool is_spp(size_t n, const vector<vertex_t>& tour, const vector<vertex_t>& mate
 }
 
 //  tour must be restored
-vector<vertex_t> splice_spp(const map<pvv, vector<vertex_t>>& hs, const vector<vertex_t>& tour) {
+vector<vertex_t> splice_spp(const unordered_map<pvv, vector<vertex_t>, hash_pvv>& hs, const vector<vertex_t>& tour) {
     const size_t n = tour.size();
     assert(n % 2 == 0);
     vector<vertex_t> res;

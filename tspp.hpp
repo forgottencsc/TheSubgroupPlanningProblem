@@ -2,7 +2,7 @@
 #include "tsp.hpp"
 
 vector<vertex_t> alg1(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    map<pvv, vector<vertex_t>> subtours;
+    unordered_map<pvv, vector<vertex_t>, hash_pvv> subtours;
     for (const vector<vertex_t>& hids : c) {
         graph_t h = induce(g, hids);
         assert(num_vertices(h) >= 2);
@@ -12,6 +12,7 @@ vector<vertex_t> alg1(const graph_t& g, const vector<vector<vertex_t>>& c) {
         tour = restore(tour, hids);
         p.first = hids[p.first];
         p.second = hids[p.second];
+        // fmt::print("({},{}): {}{}\n", p.first, p.second, w, tour);
         normalize(p);
         subtours[p] = tour;
     }
@@ -72,7 +73,7 @@ vector<vertex_t> alg2(const graph_t& g, const vector<vector<vertex_t>>& c) {
 }
 
 vector<vertex_t> alg3(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    map<pvv, vector<vertex_t>> subtours;
+    unordered_map<pvv, vector<vertex_t>, hash_pvv> subtours;
     for (const vector<vertex_t>& hids : c) {
         const graph_t& h = induce(g, hids);
         const vertex_t m = num_vertices(h);
@@ -127,9 +128,8 @@ vector<vertex_t> alg4(const graph_t& g, const vector<vector<vertex_t>>& c) {
                     auto w = boost::get(edge_weight, g, e.first);
                     vector<vertex_t> t(lp.second);
                     t.insert(t.end(), lq.second.begin(), lq.second.end());
-                    pair<weight_t, vector<vertex_t>> l(lp.first+ w + lq.first, t);
-
-                    auto ret = dp[S | (1 << x)].insert_or_assign(r, l);
+                    pair<weight_t, vector<vertex_t>> l(lp.first+ w + lq.first, t); 
+                    auto ret = dp[S | (1 << x)].insert(make_pair(r, l));
                     if (ret.second)
                         continue;
                     auto it = ret.first;
@@ -142,14 +142,19 @@ vector<vertex_t> alg4(const graph_t& g, const vector<vector<vertex_t>>& c) {
     for (size_t u = 0; u < n; ++u)
         for (size_t v = u + 1; v < n; ++v) {
             auto it = dp[(1 << k) - 1].find(make_pair(u, v));
-            if (it != dp[(1 << k) - 1].end())
+            if (it != dp[(1 << k) - 1].end()) {
+                auto p = it->second;
+                auto e = boost::edge(u, v, g);
+                auto w = boost::get(edge_weight, g, e.first);
+                p.first += w;
                 ans = min(ans, it->second);
+            }
         }
     return ans.second;
 }
 
 vector<vertex_t> algc(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    map<pvv, vector<vertex_t>> subtours;
+    unordered_map<pvv, vector<vertex_t>, hash_pvv> subtours;
     for (const vector<vertex_t>& hids : c) {
         const size_t m = hids.size();
         graph_t h(m + 1);
@@ -178,7 +183,7 @@ vector<vertex_t> algc(const graph_t& g, const vector<vector<vertex_t>>& c) {
 }
 
 vector<vertex_t> algp1(const graph_t& g, const vector<vector<vertex_t>>& c) {
-    map<pvv, vector<vertex_t>> subtours;
+    unordered_map<pvv, vector<vertex_t>, hash_pvv> subtours;
     for (const vector<vertex_t>& hids : c) {
         graph_t h = induce(g, hids);
         auto tour = tspp(h);
